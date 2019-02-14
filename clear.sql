@@ -1,0 +1,2 @@
+DELETE FROM event;
+DELETE FROM file;
