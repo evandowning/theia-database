@@ -16,12 +16,17 @@ psql -d anomaly.db -f create.sql
 psql -d anomaly.db -f clear.sql
 ```
 
-## Run consumer
+## Run Neo4j CSV creator
 ```
-$ python consume_database.py handler_database.cfg
+$ python create_neo4j_csv.py handler_neo4j.cfg
 ```
 
-## Access database
+## Run Anomaly Detector
+```
+$ python anomaly_detector.py handler_anomaly.cfg
+```
+
+## Access anomaly database
 ```
 $ psql -U username -W anomaly.db
 ```

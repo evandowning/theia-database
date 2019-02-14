@@ -5,7 +5,6 @@ import time
 import confluent_kafka
 
 from consumer import TheiaConsumer
-from theia_neo4j import TheiaNeo4j
 from theia_anomaly import TheiaAnomaly
 
 log = logging.getLogger(__name__)
@@ -13,7 +12,7 @@ log_format = '[%(asctime)s] [%(levelname)s]: %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=log_format)
 
 def usage():
-    log.error('usage: python2.7 consume_database.py handler_database.cfg')
+    log.error('usage: python2.7 anomaly_detector.py handler_anomaly.cfg')
     sys.exit(2)
 
 def _main():
@@ -29,11 +28,6 @@ def _main():
     # Create Consumer
     t_consumer = TheiaConsumer(config,config['kafka'].getboolean('reset'))
 
-    # Create Neo4j Parser
-    neo4j = None
-    if config['neo4j'].getboolean('enable'):
-       neo4j = TheiaNeo4j(config['neo4j'])
-
     # Create Anomaly Parser
     anomaly = None
     if config['anomaly'].getboolean('enable'):
@@ -42,8 +36,6 @@ def _main():
     # Consume CDM data
     while True:
         # See if data needs to be rotated/flushed
-        if neo4j is not None:
-            neo4j.rotate()
         if anomaly is not None:
             anomaly.flush()
 
@@ -52,15 +44,10 @@ def _main():
 
         # For each CDM entry
         for m in d_msgs:
-            if neo4j is not None:
-                neo4j.parse(m)
-
             if anomaly is not None:
                 anomaly.parse(m)
 
     # Final rotate/flush
-    if neo4j is not None:
-        neo4j.final_rotate()
     if anomaly is not None:
         anomaly.final_flush()
 
