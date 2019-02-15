@@ -40,5 +40,8 @@ psql> SELECT e.type,f.filename FROM event AS e, file AS f WHERE f.uuid = e.file_
   1. Install FPM: https://fpm.readthedocs.io/en/latest/installing.html
   2. Run: `$ ./package.sh`
 
-## Unpackaging
-  1. Run: `$ dpkg-deb -e analysis-db-tools_1.0-0_amd64.deb .`
+## Installing
+```
+$ sudo apt update
+$ sudo apt install analysis-db-tools python-analysis-db-consumer
+```

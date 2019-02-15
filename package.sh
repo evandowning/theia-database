@@ -29,4 +29,6 @@ neo4j-load-csv.sh=/usr/bin/ \
 neo4j.conf=/etc/neo4j/
 )
 
+fpm -s python -t deb .
+
 popd
