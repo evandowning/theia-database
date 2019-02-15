@@ -38,7 +38,7 @@ psql> SELECT e.type,f.filename FROM event AS e, file AS f WHERE f.uuid = e.file_
 
 ## Packaging
   1. Install FPM: https://fpm.readthedocs.io/en/latest/installing.html
-  2. Run: `$ package.sh`
+  2. Run: `$ ./package.sh`
 
 ## Unpackaging
-  1. Run: `$ dpkg-deb -e analysis-tools_1.0_amd64.deb .`
+  1. Run: `$ dpkg-deb -e analysis-db-tools_1.0-0_amd64.deb .`

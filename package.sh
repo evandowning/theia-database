@@ -1,15 +1,32 @@
 #!/bin/bash
 
-fpm -s dir -t deb -n analysis_tools --config-files handler_neo4j.cfg handler_anomaly.cfg clear.sql create.sql neo4j.cron neo4j-load-csv.sh neo4j.conf \
-                                           create_neo4j_csv.py=/usr/bin/ \
-                                           anomaly_detector.py=/usr/bin/ \
-                                           theia_anomaly.py=/usr/bin/ \
-                                           theia_neo4j.py=/usr/bin/ \
-                                           sensitive.py=/usr/bin/ \
-                                           handler_neo4j.cfg=/etc/theia/ \
-                                           handler_anomaly.cfg=/etc/theia/ \
-                                           create.sql=/etc/theia/ \
-                                           clear.sql=/etc/theia/ \
-                                           neo4j.cron=/etc/theia/ \
-                                           neo4j-load-csv.sh=/etc/theia/ \
-                                           neo4j.conf=/etc/neo4j/
+set -e
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+pushd $DIR
+
+DEPS=$(
+cat $DIR/requirements.txt \
+| xargs -n1 -I% echo --depends \'python-%\' \
+| sed -e "s/\(>=[^']*\)/ (\1)/g" -e "s/==\([^']*\)/ (=\1)/g" \
+)
+eval $(echo fpm \
+-s dir \
+-t deb \
+-n analysis-db-tools \
+${DEPS} \
+-v 1.0-0 \
+create_neo4j_csv.py=/usr/bin/ \
+anomaly_detector.py=/usr/bin/ \
+theia_neo4j.py=/usr/bin/ \
+sensitive.py=/usr/bin/ \
+handler_neo4j.cfg=/etc/theia/ \
+handler_anomaly.cfg=/etc/theia/ \
+create.sql=/usr/share/theia/ \
+clear.sql=/usr/share/theia/ \
+neo4j.cron=/etc/cron.d/ \
+neo4j-load-csv.sh=/usr/bin/ \
+neo4j.conf=/etc/neo4j/
+)
+
+popd
