@@ -39,10 +39,16 @@ psql> SELECT e.type,f.filename FROM event AS e, file AS f WHERE f.uuid = e.file_
 ## Packaging
   1. Install FPM: https://fpm.readthedocs.io/en/latest/installing.html
   2. Run: `$ ./package.sh`
+  3. Run to package BBN's api bindings:
+     ```
+     $ git clone git@git.tc.bbn.com:bbn/ta3-api-bindings-python.git
+     $ cd ta3-api-bindings-python/
+     $ fpm -s python -t deb .
+     ```
 
 ## Installing
 ```
 $ sudo apt update
-$ sudo apt install analysis-db-tools python-analysis-db-consumer
+$ sudo apt install analysis-db-tools
 $ sudo crontab /etc/cron.d/neo4j.cron
 ```
