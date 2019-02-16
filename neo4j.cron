@@ -1,1 +1,1 @@
-*/5 * * * * /etc/theia/neo4j-load-csv.sh /etc/theia/handler_neo4j.cfg 2>> /etc/theia/neo4j-err.txt 1>> /dev/null
+*/5 * * * * /usr/bin/neo4j-load-csv.sh /etc/theia/handler_neo4j.cfg 2>> /etc/theia/neo4j-err.txt 1>> /dev/null

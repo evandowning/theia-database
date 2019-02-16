@@ -44,4 +44,5 @@ psql> SELECT e.type,f.filename FROM event AS e, file AS f WHERE f.uuid = e.file_
 ```
 $ sudo apt update
 $ sudo apt install analysis-db-tools python-analysis-db-consumer
+$ sudo crontab /etc/cron.d/neo4j.cron
 ```
