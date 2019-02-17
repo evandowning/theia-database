@@ -3,8 +3,6 @@ https://git.tc.bbn.com/bbn/ta3-api-bindings-python
 http://www.postgresqltutorial.com/postgresql-python/insert/
 https://stackoverflow.com/questions/13902337/postgresql-database-only-insert-if-the-record-doesnt-exist#13902402
 
-sudo apt-get install python-psycopg2
-
 ## Create database
 ```
 sudo -u postgres psql
@@ -28,7 +26,7 @@ $ python anomaly_detector.py handler_anomaly.cfg
 
 ## Access anomaly database
 ```
-$ psql -U username -W anomaly.db
+$ psql -U theia -W anomaly.db
 ```
 
 ## List sensitive events
