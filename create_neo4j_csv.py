@@ -41,6 +41,8 @@ def _main():
         if neo4j is not None:
             neo4j.rotate()
 
+        print 'here'
+
         msgs = t_consumer.batch_consume(int(config['kafka']['batch_size']))
         d_msgs = t_consumer.batch_deserialize(msgs)
 

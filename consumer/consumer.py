@@ -38,13 +38,13 @@ class TheiaConsumer(object):
         self.consumer = confluent_kafka.Consumer(config)
         self.consumer.subscribe([self.topic])
 
-        schema = Utils.load_schema(conf['kafka']['schema'])
+        p_schema = Utils.load_schema(conf['kafka']['schema'])
         c_schema = Utils.load_schema(conf['kafka']['schema'])
-        self.deserializer = KafkaAvroGenericDeserializer(schema, schema)
+        self.deserializer = KafkaAvroGenericDeserializer(c_schema, p_schema)
 
     def batch_consume(self, count):
         msgs = list()
-        kafka_msgs = self.consumer.consume(num_messages=count)
+        kafka_msgs = self.consumer.consume(num_messages=count,timeout=1.0)
         msgs = [msg.value() for msg in kafka_msgs if not msg.error()]
         return msgs
 
@@ -54,7 +54,7 @@ class TheiaConsumer(object):
         contain this string."""
 
         d_msgs = list()
-        for msg in msgs:
+        for e,msg in enumerate(msgs):
             if not include or any(x in msg for x in include):
                 d_msg = self.deserializer.deserialize(self.topic, msg)
                 d_msgs.append(d_msg)
