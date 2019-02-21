@@ -36,24 +36,25 @@ def _main():
        neo4j = TheiaNeo4j(config['neo4j'])
 
     # Consume CDM data
-    while True:
-        # See if data needs to be rotated/flushed
-        if neo4j is not None:
-            neo4j.rotate()
-
-        print 'here'
-
-        msgs = t_consumer.batch_consume(int(config['kafka']['batch_size']))
-        d_msgs = t_consumer.batch_deserialize(msgs)
-
-        # For each CDM entry
-        for m in d_msgs:
+    try:
+        while True:
+            # See if data needs to be rotated/flushed
             if neo4j is not None:
-                neo4j.parse(m)
+                neo4j.rotate()
 
-    # Final rotate/flush
-    if neo4j is not None:
-        neo4j.final_rotate()
+            print 'here'
+
+            msgs = t_consumer.batch_consume(int(config['kafka']['batch_size']))
+            d_msgs = t_consumer.batch_deserialize(msgs)
+
+            # For each CDM entry
+            for m in d_msgs:
+                if neo4j is not None:
+                    neo4j.parse(m)
+    finally:
+        # Final rotate/flush
+        if neo4j is not None:
+            neo4j.final_rotate()
 
 if __name__ == '__main__':
     _main()
