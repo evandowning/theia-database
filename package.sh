@@ -19,7 +19,7 @@ eval $(echo fpm \
 -s dir \
 -t deb \
 -n analysis-db-tools \
-${DEPS} --depends \'postgresql \(\>=9.5\)\' \
+${DEPS} --depends \'postgresql \(\>=9.5\)\' --depends python-analysis-db-consumer \
 -v 1.0-0 \
 create_neo4j_csv.py=/usr/bin/ \
 anomaly_detector.py=/usr/bin/ \
