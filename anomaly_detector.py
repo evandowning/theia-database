@@ -33,25 +33,36 @@ def _main():
     # Create Anomaly Parser
     anomaly = None
     if config['anomaly'].getboolean('enable'):
-       anomaly = TheiaAnomaly(config['anomaly'])
+        anomaly = TheiaAnomaly(config['anomaly'])
+
+    i = 0
 
     # Consume CDM data
-    while True:
-        # See if data needs to be rotated/flushed
-        if anomaly is not None:
-            anomaly.flush()
-
-        msgs = t_consumer.batch_consume(int(config['kafka']['batch_size']))
-        d_msgs = t_consumer.batch_deserialize(msgs)
-
-        # For each CDM entry
-        for m in d_msgs:
+    try:
+        while True:
+            # See if data needs to be rotated/flushed
             if anomaly is not None:
-                anomaly.parse(m)
+                anomaly.flush()
 
-    # Final rotate/flush
-    if anomaly is not None:
-        anomaly.final_flush()
+            sys.stdout.write('Pulling batch {0}...'.format(i))
+            sys.stdout.flush()
+
+            msgs = t_consumer.batch_consume(int(config['kafka']['batch_size']))
+            d_msgs = t_consumer.batch_deserialize(msgs)
+
+            sys.stdout.write('done\n')
+            sys.stdout.flush()
+            i += 1
+
+            # For each CDM entry
+            for m in d_msgs:
+                if anomaly is not None:
+                    anomaly.parse(m)
+
+    finally:
+        # Final rotate/flush
+        if anomaly is not None:
+            anomaly.final_flush()
 
     # Close Anomaly database connection
     if anomaly is not None:

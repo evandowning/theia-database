@@ -35,6 +35,14 @@ class TheiaConsumer(object):
             self._update_state(conf,'group_id', group_id)
         config["group.id"] = group_id
 
+        # Add SSL stuff
+        if conf['kafka'].getboolean('ssl_enable'):
+            config["security.protocol"] = 'ssl'
+            config["ssl.ca.location"] = conf['kafka']['ca_path']
+            config["ssl.certificate.location"] = conf['kafka']['cert_path']
+            config["ssl.key.location"] = conf['kafka']['key_path']
+            config["ssl.key.password"] = conf['kafka']['password']
+
         self.consumer = confluent_kafka.Consumer(config)
         self.consumer.subscribe([self.topic])
 

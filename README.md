@@ -10,6 +10,9 @@ postgres=# create database "anomaly.db";
 postgres=# create user theia with encrypted password 'darpatheia1';
 postgres=# grant all privileges on database "anomaly.db" to theia;
 
+psql -d anomaly.db
+postgres=# GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO userName;
+
 psql -d anomaly.db -f create.sql
 psql -d anomaly.db -f clear.sql
 ```

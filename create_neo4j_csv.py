@@ -35,6 +35,8 @@ def _main():
     if config['neo4j'].getboolean('enable'):
        neo4j = TheiaNeo4j(config['neo4j'])
 
+    i = 0
+
     # Consume CDM data
     try:
         while True:
@@ -42,10 +44,15 @@ def _main():
             if neo4j is not None:
                 neo4j.rotate()
 
-            print 'here'
+            sys.stdout.write('Pulling batch {0}...'.format(i))
+            sys.stdout.flush()
 
             msgs = t_consumer.batch_consume(int(config['kafka']['batch_size']))
             d_msgs = t_consumer.batch_deserialize(msgs)
+
+            sys.stdout.write('done\n')
+            sys.stdout.flush()
+            i += 1
 
             # For each CDM entry
             for m in d_msgs:

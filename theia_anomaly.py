@@ -44,7 +44,7 @@ class TheiaAnomaly(object):
                               "/data/ahg\.dump\..*", \
                             ]
 
-    # To santize string for inserting into PostgreSQL
+    # To sanitize string for inserting into PostgreSQL
     def sanitize(self, string):
         string = string.replace("\\", "\\\\")
         string = string.replace("'", "\\'")
@@ -72,6 +72,8 @@ class TheiaAnomaly(object):
         cdm_host = data['hostId']
         uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=cdm_uuid))
 
+        log.info(cdm_type)
+
         # If no connection, no need to parse anything
         if self.conn is None:
             return
@@ -89,6 +91,9 @@ class TheiaAnomaly(object):
                entry_type == 'EVENT_WRITE' or \
                entry_type == 'EVENT_OPEN' or \
                entry_type == 'EVENT_MMAP':
+
+                #TODO - debugging
+                log.info("Querying filename")
 
                 # Get filename
                 filename = ''
@@ -123,6 +128,9 @@ class TheiaAnomaly(object):
                                      "SELECT uuid FROM event WHERE " \
                                      "uuid='{0}');".format(uuid_str,entry_type,p_uuid_str))
 
+                    #TODO - debugging
+                    log.info('Added sensitive event')
+
         # If it's a subject
         elif cdm_type == 'RECORD_SUBJECT':
             # Get parameters
@@ -156,6 +164,9 @@ class TheiaAnomaly(object):
 
             # Escape special Anomaly characters
             filename = self.sanitize(filename)
+
+            #TODO - debugging
+            log.info('{0} {1}'.format(uuid_str,filename))
 
             # Add file UUID to database
             self.cur.execute("INSERT INTO file (uuid,filename) " \
