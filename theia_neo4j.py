@@ -293,7 +293,7 @@ class TheiaNeo4j(object):
         cdm_type = data['type']
         cdm_uuid = data['datum']['uuid']
         cdm_host = data['hostId']
-        uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=cdm_uuid))
+        uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=cdm_uuid))
 
 
         # If it's an event
@@ -302,13 +302,13 @@ class TheiaNeo4j(object):
             entry_type = data['datum']['type']
 
             subject_uuid = data['datum']['subject']
-            s_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=subject_uuid))
+            s_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=subject_uuid))
 
             predicate_uuid = data['datum']['predicateObject']
-            p_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=predicate_uuid))
+            p_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=predicate_uuid))
 
             predicate2_uuid = data['datum']['predicateObject2']
-            p2_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=predicate2_uuid))
+            p2_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=predicate2_uuid))
 
             timestamp = data['datum']['timestampNanos']
             size = data['datum']['size']
@@ -367,10 +367,10 @@ class TheiaNeo4j(object):
             cid = data['datum']['cid']
 
             parent_uuid = data['datum']['parentSubject']
-            p_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=parent_uuid))
+            p_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=parent_uuid))
 
             local_uuid = data['datum']['localPrincipal']
-            l_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=local_uuid))
+            l_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=local_uuid))
 
             timestamp = data['datum']['startTimestampNanos']
 
@@ -400,7 +400,7 @@ class TheiaNeo4j(object):
         elif cdm_type == 'RECORD_FILE_OBJECT':
             # Get parameters
             local_uuid = data['datum']['localPrincipal']
-            l_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=local_uuid))
+            l_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=local_uuid))
 
             filename = ''
             if 'filename' in data['datum']['baseObject']['properties']:

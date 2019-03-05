@@ -72,8 +72,6 @@ class TheiaAnomaly(object):
         cdm_host = data['hostId']
         uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=cdm_uuid))
 
-        log.info(cdm_type)
-
         # If no connection, no need to parse anything
         if self.conn is None:
             return

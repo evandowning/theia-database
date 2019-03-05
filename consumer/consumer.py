@@ -52,7 +52,7 @@ class TheiaConsumer(object):
 
     def batch_consume(self, count):
         msgs = list()
-        kafka_msgs = self.consumer.consume(num_messages=count,timeout=1.0)
+        kafka_msgs = self.consumer.consume(num_messages=count,timeout=5.0)
         msgs = [msg.value() for msg in kafka_msgs if not msg.error()]
         return msgs
 
