@@ -19,6 +19,7 @@ psql -d anomaly.db -f clear.sql
 
 ## Run Neo4j CSV creator
 ```
+$ sudo crontab /etc/cron.d/neo4j.cron
 $ python create_neo4j_csv.py handler_neo4j.cfg
 ```
 
@@ -47,9 +48,13 @@ psql> SELECT e.type,f.filename FROM event AS e, file AS f WHERE f.uuid = e.file_
      $ fpm -s python -t deb .
      ```
 
+## Clean up packaging files
+```
+$ sudo ./package_clean.sh
+```
+
 ## Installing
 ```
 $ sudo apt update
-$ sudo apt install analysis-db-tools
-$ sudo crontab /etc/cron.d/neo4j.cron
+$ sudo apt install -o Dpkg::Options::="--force-overwrite" analysis-db-tools
 ```

@@ -44,7 +44,7 @@ def _main():
             if anomaly is not None:
                 anomaly.flush()
 
-            sys.stdout.write('Pulling batch {0}...'.format(i))
+            sys.stdout.write('Polling batch {0}...'.format(i))
             sys.stdout.flush()
 
             msgs = t_consumer.batch_consume(int(config['kafka']['batch_size']))
