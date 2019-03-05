@@ -23,6 +23,10 @@ class TheiaAnomaly(object):
         self.server = conf['server']
         self.port = int(conf['port'])
         self.flush_time = int(conf['flush_time'])
+        self.cache_max = int(conf['cache_max'])
+
+        # Create cache for filenames (keyed on UUID)
+        self.cache = dict()
 
         # Open database
         try:
@@ -70,7 +74,7 @@ class TheiaAnomaly(object):
         cdm_type = data['type']
         cdm_uuid = data['datum']['uuid']
         cdm_host = data['hostId']
-        uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=cdm_uuid))
+        uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=cdm_uuid))
 
         # If no connection, no need to parse anything
         if self.conn is None:
@@ -82,7 +86,7 @@ class TheiaAnomaly(object):
             entry_type = data['datum']['type']
 
             predicate_uuid = data['datum']['predicateObject']
-            p_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=predicate_uuid))
+            p_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=predicate_uuid))
 
             # If this is a potentially sensitive event
             if entry_type == 'EVENT_READ' or \
@@ -90,27 +94,32 @@ class TheiaAnomaly(object):
                entry_type == 'EVENT_OPEN' or \
                entry_type == 'EVENT_MMAP':
 
-                #TODO - debugging
-                log.info("Querying filename")
-
-                # Get filename
                 filename = ''
-                tmp_cur = self.conn.cursor()
+                # Get filename from cache
+                if p_uuid_str in self.cache:
+                    filename,hits = self.cache[p_uuid_str]
 
-                tmp_cur.execute("SELECT filename from file WHERE " \
-                                "uuid = '{0}';".format(p_uuid_str))
+                    # Increase popularity of cache hit
+                    self.cache[p_uuid_str] = (filename,hits+1)
 
-                records = tmp_cur.fetchall()
+                # Get filename from database
+                else:
+                    tmp_cur = self.conn.cursor()
 
-                # If no filename exists, then skip this event
-                if len(records) == 0:
-                    return
+                    tmp_cur.execute("SELECT filename from file WHERE " \
+                                    "uuid = '{0}';".format(p_uuid_str))
 
-                # Else, get filename
-                for row in records:
-                    filename = row[0]
+                    records = tmp_cur.fetchall()
 
-                tmp_cur.close()
+                    # If no filename exists, then skip this event
+                    if len(records) == 0:
+                        return
+
+                    # Else, get filename
+                    for row in records:
+                        filename = row[0]
+
+                    tmp_cur.close()
 
                 # If we should ignore this file, then skip this event
                 if self.ignore(filename):
@@ -125,9 +134,6 @@ class TheiaAnomaly(object):
                                      "WHERE NOT EXISTS ( " \
                                      "SELECT uuid FROM event WHERE " \
                                      "uuid='{0}');".format(uuid_str,entry_type,p_uuid_str))
-
-                    #TODO - debugging
-                    log.info('Added sensitive event')
 
         # If it's a subject
         elif cdm_type == 'RECORD_SUBJECT':
@@ -154,7 +160,7 @@ class TheiaAnomaly(object):
         elif cdm_type == 'RECORD_FILE_OBJECT':
             # Get parameters
             local_uuid = data['datum']['localPrincipal']
-            l_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '-' + str(uuid.UUID(bytes=local_uuid))
+            l_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=local_uuid))
 
             filename = ''
             if 'filename' in data['datum']['baseObject']['properties']:
@@ -163,8 +169,14 @@ class TheiaAnomaly(object):
             # Escape special Anomaly characters
             filename = self.sanitize(filename)
 
-            #TODO - debugging
-            log.info('{0} {1}'.format(uuid_str,filename))
+            # If cache is too big, remove most unpopular cached item
+            if len(self.cache.keys()) >= self.cache_max:
+                smallest = sorted(d.keys(), key=lambda x: x[1], reverse=True)[0]
+                del self.cache[smallest]
+
+            # Insert filename into cache
+            if uuid_str not in self.cache:
+                self.cache[uuid_str] = (filename,0)
 
             # Add file UUID to database
             self.cur.execute("INSERT INTO file (uuid,filename) " \
@@ -211,6 +223,8 @@ class TheiaAnomaly(object):
 
         # If it's time to flush
         if current >= (self.last_time + self.flush_time):
+            log.info('Flushing database.')
+
             # Commit to database
             self.conn.commit()
 
