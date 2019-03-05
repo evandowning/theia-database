@@ -35,7 +35,8 @@ etc/create.sql=/usr/share/theia/ \
 etc/clear.sql=/usr/share/theia/ \
 etc/neo4j.cron=/etc/cron.d/ \
 neo4j-load-csv.sh=/usr/bin/ \
-etc/neo4j.conf=/etc/neo4j/
+etc/neo4j.conf=/etc/neo4j/ \
+etc/TCCDMDatum.avsc=/usr/local/include/tc_schema/
 )
 
 # Create db package for consumer dependency
