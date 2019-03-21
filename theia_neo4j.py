@@ -235,7 +235,7 @@ class TheiaNeo4j(object):
             self.csv_be_file = open(self.csv_be,'w')
 
             # Reset count
-            self.count_be += 1
+            self.count_be = 0
 
     # Rotate Subject Node Update CSV files
     def rotate_subject_update_node(self):
@@ -260,7 +260,7 @@ class TheiaNeo4j(object):
             self.csv_sn_update_file = open(self.csv_sn_update,'w')
 
             # Reset count
-            self.count_sn_update += 1
+            self.count_sn_update = 0
 
     # Rotate IPC Node CSV files
     def rotate_ipc_node(self):
@@ -285,7 +285,7 @@ class TheiaNeo4j(object):
             self.csv_in_file = open(self.csv_in,'w')
 
             # Reset count
-            self.count_in += 1
+            self.count_in = 0
 
     # Parse CDM data
     def parse(self, data):
@@ -324,10 +324,10 @@ class TheiaNeo4j(object):
                                                                                 entry_type)
 
             # If this is a backwards edge
-            if cdm_type == 'EVENT_READ' or \
-               cdm_type == 'EVENT_READ_SOCKET_PARAMS' or \
-               cdm_type == 'EVENT_RECVFROM' or \
-               cdm_type == 'EVENT_RECVMSG':
+            if entry_type == 'EVENT_READ' or \
+               entry_type == 'EVENT_READ_SOCKET_PARAMS' or \
+               entry_type == 'EVENT_RECVFROM' or \
+               entry_type == 'EVENT_RECVMSG':
 
                 # Write output to CSV file
                 self.csv_be_file.write(output)
