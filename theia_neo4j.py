@@ -243,7 +243,7 @@ class TheiaNeo4j(object):
         self.count_sn_update += 1
 
         # If we need to rotate
-        if self.count_sn_update >= self.batch_edges:
+        if self.count_sn_update >= self.batch_nodes:
             log.info('Rotating Subject Node Update CSV files')
 
             # Flush content of file
