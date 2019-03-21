@@ -268,7 +268,7 @@ class TheiaNeo4j(object):
         self.count_in += 1
 
         # If we need to rotate
-        if self.count_in >= self.batch_edges:
+        if self.count_in >= self.batch_nodes:
             log.info('Rotating IPC Node CSV files')
 
             # Flush content of file
