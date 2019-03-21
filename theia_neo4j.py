@@ -375,6 +375,7 @@ class TheiaNeo4j(object):
             timestamp = data['datum']['startTimestampNanos']
 
             cmdline = data['datum']['cmdLine']
+            cmdline = cmdline.encode('utf8').strip()
 
             # Escape special Neo4j characters
             cmdline = self.sanitize(cmdline)

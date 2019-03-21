@@ -140,7 +140,6 @@ class TheiaAnomaly(object):
             # Get parameters
             entry_type = data['datum']['type']
 
-            cmdline = data['datum']['cmdLine']
             path = data['datum']['properties']['path']
 
             # Sanitize special characters
