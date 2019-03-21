@@ -6,7 +6,6 @@ import json
 
 from tc.services import kafka
 from tc.schema.serialization.kafka import KafkaAvroGenericDeserializer
-from tc.schema.serialization.base import AvroJsonDeserializer
 from tc.schema.serialization import Utils
 
 log = logging.getLogger(__name__)
