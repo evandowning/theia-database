@@ -180,8 +180,8 @@ QUERY="\"
 USING PERIODIC COMMIT 500
 LOAD CSV FROM 'file:///ipc-node.csv' as line
 MERGE (n:NODE {uuid: line[1]})
-ON CREATE SET n.nodeType = line[0], n.type = line[2], n.name = line[2]
-ON MATCH SET n.nodeType = line[0], n.type = line[2], n.name = line[2]
+ON CREATE SET n.nodeType = line[0], n.type = line[2], n.name = line[3]
+ON MATCH SET n.nodeType = line[0], n.type = line[2], n.name = line[3]
 \""
 query $archive "$root/ipc-node-*" "\${QUERY}" ${IMPORT_DIR}/ipc-node.csv
 

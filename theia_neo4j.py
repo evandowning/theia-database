@@ -314,14 +314,15 @@ class TheiaNeo4j(object):
             size = data['datum']['size']
 
             # Construct CSV line
-            output = '"{0}","{1}","{2}","{3}","{4}","{5}","{6}","{7}"\n'.format('EVENT', \
-                                                                                uuid_str, \
-                                                                                s_uuid_str, \
-                                                                                p_uuid_str, \
-                                                                                p2_uuid_str, \
-                                                                                timestamp, \
-                                                                                size, \
-                                                                                entry_type)
+            output = '"{0}","{1}","{2}","{3}","{4}","{5}","{6}","{7}","{8}"\n'.format('EVENT', \
+                                                                                      uuid_str, \
+                                                                                      entry_type, \
+                                                                                      s_uuid_str, \
+                                                                                      p_uuid_str, \
+                                                                                      p2_uuid_str, \
+                                                                                      timestamp, \
+                                                                                      size, \
+                                                                                      entry_type)
 
             # If this is a backwards edge
             if entry_type == 'EVENT_READ' or \
@@ -342,6 +343,24 @@ class TheiaNeo4j(object):
 
                 # See if we need to rotate files
                 self.rotate_forward_edge()
+
+                # If this is an execute event, we need to update a subject
+                if entry_type == 'EVENT_EXECUTE':
+                    # Get cmdline property
+                    cmdline = data['datum']['properties']['cmdLine']
+                    cmdline = cmdline.encode('utf8').strip()
+
+                    # Escape special Neo4j characters
+                    cmdline = self.sanitize(cmdline)
+
+                    output = '"{0}","{1}"\n'.format(s_uuid_str, \
+                                                    cmdline)
+
+                    # Write output to CSV file
+                    self.csv_sn_update_file.write(output)
+
+                    # See if we need to rotate files
+                    self.rotate_subject_update_node()
 
         # If it's a principal
         elif cdm_type == 'RECORD_PRINCIPAL':

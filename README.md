@@ -23,6 +23,11 @@ $ sudo crontab /etc/cron.d/neo4j.cron
 $ python create_neo4j_csv.py handler_neo4j.cfg
 ```
 
+## Configure /etc/neo4j/neo4j.conf
+```
+$ neo4j-admin memrec
+```
+
 ## Run Anomaly Detector
 ```
 $ python anomaly_detector.py handler_anomaly.cfg
