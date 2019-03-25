@@ -16,7 +16,7 @@ function query() {
     # Run queries from each CSV file
     count=1
     max=`ls -1 $BASE | wc -l`
-    for file in `ls -1 $BASE | sort -rn`; do
+    for file in `ls -1 $BASE | sort -n`; do
         if [[ -f $file ]]; then
             # Check if we need to exit
             if [[ $max -le $count ]]; then
