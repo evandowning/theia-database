@@ -48,9 +48,7 @@ psql> SELECT e.type,f.filename FROM event AS e, file AS f WHERE f.uuid = e.file_
   2. Run: `$ ./package.sh`
   3. Run to package BBN's api bindings:
      ```
-     $ git clone git@git.tc.bbn.com:evan/ta3-api-bindings-python.git
-     $ cd ta3-api-bindings-python/
-     $ git checkout change_avro
+     $ git clone git@git.tc.bbn.com:bbn/ta3-api-bindings-python.git
      $ fpm -s python -t deb .
      ```
 
