@@ -45,8 +45,8 @@ function query() {
     echo '==============================================='
 }
 
-if [[ "$#" -ne 1 ]]; then
-    echo "usage: neo4j-load-csv.sh handler_neo4j.cfg"
+if [[ "$#" -ne 2 ]]; then
+    echo "usage: neo4j-load-csv.sh handler_neo4j.cfg id"
     exit 2
 fi
 
@@ -57,7 +57,7 @@ fi
 
 # Create lockfile so this script isn't run twice simultaneously
 # https://stackoverflow.com/questions/185451/quick-and-dirty-way-to-ensure-only-one-instance-of-a-shell-script-is-running-at?page=1&tab=votes#tab-top
-LOCKFILE=/tmp/neo4jlock.txt
+LOCKFILE=/tmp/neo4jlock-$2.txt
 if [ -e ${LOCKFILE} ] && kill -0 `cat ${LOCKFILE}`; then
     echo "already running"
     exit
@@ -97,7 +97,7 @@ eval "${CYPHER_BIN}" "${CYPHER_ARGS}" "${QUERY}"
 # Run query on backward edges
 QUERY="\"
 USING PERIODIC COMMIT 500
-LOAD CSV FROM 'file:///backward-edge.csv' as line
+LOAD CSV FROM 'file:///backward-edge-$2.csv' as line
 MERGE (n1:NODE {uuid: line[3]})
 MERGE (n2:NODE {uuid: line[4]})
 MERGE (n3:NODE {uuid: line[5]})
@@ -108,12 +108,12 @@ WITH line,n1,n3
 WHERE n1.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0' AND n3.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'
 CREATE (n1)<-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[6], size:line[7], name:line[8]}]-(n3);
 \""
-query $archive "$root/backward-edge-*" "\${QUERY}" ${IMPORT_DIR}/backward-edge.csv
+query $archive "$root/backward-edge-*" "\${QUERY}" ${IMPORT_DIR}/backward-edge-$2.csv
 
 # Run query on forward edges
 QUERY="\"
 USING PERIODIC COMMIT 500
-LOAD CSV FROM 'file:///forward-edge.csv' as line
+LOAD CSV FROM 'file:///forward-edge-$2.csv' as line
 MERGE (n1:NODE {uuid: line[3]})
 MERGE (n2:NODE {uuid: line[4]})
 MERGE (n3:NODE {uuid: line[5]})
@@ -124,66 +124,66 @@ WITH line,n1,n3
 WHERE n1.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0' AND n3.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'
 CREATE (n1)-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[6], size:line[7], name:line[8]}]->(n3);
 \""
-query $archive "$root/forward-edge-*" "\${QUERY}" ${IMPORT_DIR}/forward-edge.csv
+query $archive "$root/forward-edge-*" "\${QUERY}" ${IMPORT_DIR}/forward-edge-$2.csv
 
 # Run query on principal nodes
 QUERY="\"
 USING PERIODIC COMMIT 500
-LOAD CSV FROM 'file:///principal-node.csv' as line
+LOAD CSV FROM 'file:///principal-node-$2.csv' as line
 MERGE (n:NODE {uuid: line[1]})
 ON CREATE SET n.nodeType = line[0], n.userId = line[2], n.name = line[3]
 ON MATCH SET n.nodeType = line[0], n.userId = line[2], n.name = line[3];
 \""
-query $archive "$root/principal-node-*" "\${QUERY}" ${IMPORT_DIR}/principal-node.csv
+query $archive "$root/principal-node-*" "\${QUERY}" ${IMPORT_DIR}/principal-node-$2.csv
 
 # Run query on subject nodes
 QUERY="\"
 USING PERIODIC COMMIT 500
-LOAD CSV FROM 'file:///subject-node.csv' as line
+LOAD CSV FROM 'file:///subject-node-$2.csv' as line
 MERGE (n:NODE {uuid: line[1]})
 ON CREATE SET n.nodeType = line[0], n.type = line[2], n.cid = line[3], n.parent_subject = line[4], n.local_principal = line[5], n.ts = line[6], n.cmdline = line[7], n.name = line[8]
 ON MATCH SET n.nodeType = line[0], n.type = line[2], n.cid = line[3], n.parent_subject = line[4], n.local_principal = line[5], n.ts = line[6], n.cmdline = line[7], n.name = line[8];
 \""
-query $archive "$root/subject-node-*" "\${QUERY}" ${IMPORT_DIR}/subject-node.csv
+query $archive "$root/subject-node-*" "\${QUERY}" ${IMPORT_DIR}/subject-node-$2.csv
 
 # Run query on subject nodes to update them in the event of execve
 QUERY="\"
 USING PERIODIC COMMIT 500
-LOAD CSV FROM 'file:///subject-node-update.csv' as line
+LOAD CSV FROM 'file:///subject-node-update-$2.csv' as line
 MERGE (n:NODE {uuid: line[0]})
 ON MATCH SET n.cmdline = line[1], n.name = n.cid + ':' + line[1];
 \""
-query $archive "$root/subject-update-*" "\${QUERY}" ${IMPORT_DIR}/subject-node-update.csv
+query $archive "$root/subject-update-*" "\${QUERY}" ${IMPORT_DIR}/subject-node-update-$2.csv
 
 # Run query on file nodes
 QUERY="\"
 USING PERIODIC COMMIT 500
-LOAD CSV FROM 'file:///file-node.csv' as line
+LOAD CSV FROM 'file:///file-node-$2.csv' as line
 MERGE (n:NODE {uuid: line[1]})
 ON CREATE SET n.nodeType = line[0], n.local_principal = line[2], n.filename = line[3], n.name = line[4]
 ON MATCH SET n.nodeType = line[0], n.local_principal = line[2], n.filename = line[3], n.name = line[4];
 \""
-query $archive "$root/file-node-*" "\${QUERY}" ${IMPORT_DIR}/file-node.csv
+query $archive "$root/file-node-*" "\${QUERY}" ${IMPORT_DIR}/file-node-$2.csv
 
 # Run query on netflow nodes
 QUERY="\"
 USING PERIODIC COMMIT 500
-LOAD CSV FROM 'file:///netflow-node.csv' as line
+LOAD CSV FROM 'file:///netflow-node-$2.csv' as line
 MERGE (n:NODE {uuid: line[1]})
 ON CREATE SET n.nodeType = line[0], n.local_address = line[2], n.local_port = line[3], n.remote_address = line[4], n.remote_port = line[5], n.name = line[6]
 ON MATCH SET n.nodeType = line[0], n.local_address = line[2], n.local_port = line[3], n.remote_address = line[4], n.remote_port = line[5], n.name = line[6];
 \""
-query $archive "$root/netflow-node-*" "\${QUERY}" ${IMPORT_DIR}/netflow-node.csv
+query $archive "$root/netflow-node-*" "\${QUERY}" ${IMPORT_DIR}/netflow-node-$2.csv
 
 # Run query on ipc nodes
 QUERY="\"
 USING PERIODIC COMMIT 500
-LOAD CSV FROM 'file:///ipc-node.csv' as line
+LOAD CSV FROM 'file:///ipc-node-$2.csv' as line
 MERGE (n:NODE {uuid: line[1]})
 ON CREATE SET n.nodeType = line[0], n.type = line[2], n.name = line[3]
 ON MATCH SET n.nodeType = line[0], n.type = line[2], n.name = line[3]
 \""
-query $archive "$root/ipc-node-*" "\${QUERY}" ${IMPORT_DIR}/ipc-node.csv
+query $archive "$root/ipc-node-*" "\${QUERY}" ${IMPORT_DIR}/ipc-node-$2.csv
 
 # Remove lockfile
 rm -f ${LOCKFILE}
