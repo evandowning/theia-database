@@ -102,7 +102,7 @@ MERGE (n1:NODE {uuid: line[3]})
 MERGE (n2:NODE {uuid: line[4]})
 WITH line,n1,n2
 WHERE n1.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0' AND n2.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'
-CREATE (n1)<-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[6], size:line[7], name:line[8]}]-(n2)
+CREATE (n1)<-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[5], size:line[6], name:line[7]}]-(n2)
 \""
 query $archive "$root/backward-edge-*" "\${QUERY}" ${IMPORT_DIR}/backward-edge-$2.csv
 
@@ -114,7 +114,7 @@ MERGE (n1:NODE {uuid: line[3]})
 MERGE (n2:NODE {uuid: line[4]})
 WITH line,n1,n2
 WHERE n1.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0' AND n2.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'
-CREATE (n1)-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[6], size:line[7], name:line[8]}]->(n2)
+CREATE (n1)-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[5], size:line[6], name:line[7]}]->(n2)
 \""
 query $archive "$root/forward-edge-*" "\${QUERY}" ${IMPORT_DIR}/forward-edge-$2.csv
 
