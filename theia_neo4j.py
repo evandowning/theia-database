@@ -320,6 +320,12 @@ class TheiaNeo4j(object):
                                                                                 size, \
                                                                                 entry_type)
 
+            # If these are memory edges, we don't care about them for
+            # our reachability analysis at the moment
+            if entry_type == 'EVENT_MPROTECT' or \
+               entry_type == 'EVENT_MMAP':
+                return
+
             # If this is a backwards edge
             if entry_type == 'EVENT_READ' or \
                entry_type == 'EVENT_READ_SOCKET_PARAMS' or \
