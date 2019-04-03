@@ -307,22 +307,18 @@ class TheiaNeo4j(object):
             predicate_uuid = data['datum']['predicateObject']
             p_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=predicate_uuid))
 
-            predicate2_uuid = data['datum']['predicateObject2']
-            p2_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=predicate2_uuid))
-
             timestamp = data['datum']['timestampNanos']
             size = data['datum']['size']
 
             # Construct CSV line
-            output = '"{0}","{1}","{2}","{3}","{4}","{5}","{6}","{7}","{8}"\n'.format('EVENT', \
-                                                                                      uuid_str, \
-                                                                                      entry_type, \
-                                                                                      s_uuid_str, \
-                                                                                      p_uuid_str, \
-                                                                                      p2_uuid_str, \
-                                                                                      timestamp, \
-                                                                                      size, \
-                                                                                      entry_type)
+            output = '"{0}","{1}","{2}","{3}","{4}","{5}","{6}","{7}"\n'.format('EVENT', \
+                                                                                uuid_str, \
+                                                                                entry_type, \
+                                                                                s_uuid_str, \
+                                                                                p_uuid_str, \
+                                                                                timestamp, \
+                                                                                size, \
+                                                                                entry_type)
 
             # If this is a backwards edge
             if entry_type == 'EVENT_READ' or \
