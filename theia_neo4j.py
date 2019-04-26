@@ -326,7 +326,7 @@ class TheiaNeo4j(object):
             # way to distinquish non-dataflow events from dataflow 
             # events.  For now, let's just ignore them.
             if entry_type == 'EVENT_OPEN':
-                continue
+                return
 
             # If these are memory edges, we don't care about them for
             # our reachability analysis at the moment
