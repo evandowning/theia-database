@@ -319,6 +319,14 @@ class TheiaNeo4j(object):
                                                                                 timestamp, \
                                                                                 size, \
                                                                                 entry_type)
+            # XXX(joey): EVENT_OPEN creates a backward edge, even
+            # when the process never writes to it. This causes us
+            # to pick up extra processes during backward analysis
+            # (replaying more processes than we should). We need a 
+            # way to distinquish non-dataflow events from dataflow 
+            # events.  For now, let's just ignore them.
+            if entry_type == 'EVENT_OPEN':
+                continue
 
             # If these are memory edges, we don't care about them for
             # our reachability analysis at the moment
