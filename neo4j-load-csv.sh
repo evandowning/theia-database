@@ -189,7 +189,7 @@ WITH line,n1,n2
 WHERE NOT n1.uuid ENDS WITH '00000000-0000-0000-0000-000000000000' AND NOT n2.uuid ENDS WITH '00000000-0000-0000-0000-000000000000'
 CREATE (n1)-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[5], size:line[6], name:line[7]}]->(n2)
 WITH line,n1,n2
-WHERE NOT n1.cid = n1.tgid
+WHERE NOT n2.cid = n2.tgid
 CREATE (n1)<-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[5], size:line[6], name:line[7]}]-(n2)
 \""
 query $archive "$root/clone-edge-*" "\${QUERY}" ${IMPORT_DIR}/clone-edge-$2.csv
