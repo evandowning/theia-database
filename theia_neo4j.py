@@ -32,6 +32,7 @@ class TheiaNeo4j(object):
         self.csv_nn_base = os.path.join(self.csv_dir,'netflow-node-')
         self.csv_fe_base = os.path.join(self.csv_dir,'forward-edge-')
         self.csv_be_base = os.path.join(self.csv_dir,'backward-edge-')
+        self.csv_ce_base = os.path.join(self.csv_dir,'clone-edge-')
         self.csv_sn_update_base = os.path.join(self.csv_dir,'subject-update-')
         self.csv_in_base = os.path.join(self.csv_dir,'ipc-node-')
 
@@ -42,6 +43,7 @@ class TheiaNeo4j(object):
         self.count_nn = 0
         self.count_fe = 0
         self.count_be = 0
+        self.count_ce = 0
         self.count_sn_update = 0
         self.count_in = 0
 
@@ -52,6 +54,7 @@ class TheiaNeo4j(object):
         self.file_count_nn = 0
         self.file_count_fe = 0
         self.file_count_be = 0
+        self.file_count_ce = 0
         self.file_count_sn_update = 0
         self.file_count_in = 0
 
@@ -62,6 +65,7 @@ class TheiaNeo4j(object):
         self.csv_nn = '{0}{1}.csv'.format(self.csv_nn_base,self.file_count_nn)
         self.csv_fe = '{0}{1}.csv'.format(self.csv_fe_base,self.file_count_fe)
         self.csv_be = '{0}{1}.csv'.format(self.csv_be_base,self.file_count_be)
+        self.csv_ce = '{0}{1}.csv'.format(self.csv_ce_base,self.file_count_ce)
         self.csv_sn_update = '{0}{1}.csv'.format(self.csv_sn_update_base,self.file_count_sn_update)
         self.csv_in = '{0}{1}.csv'.format(self.csv_in_base,self.file_count_in)
 
@@ -72,6 +76,7 @@ class TheiaNeo4j(object):
         self.csv_nn_file = open(self.csv_nn,'w')
         self.csv_fe_file = open(self.csv_fe,'w')
         self.csv_be_file = open(self.csv_be,'w')
+        self.csv_ce_file = open(self.csv_ce,'w')
         self.csv_sn_update_file = open(self.csv_sn_update,'w')
         self.csv_in_file = open(self.csv_in,'w')
 
@@ -237,6 +242,31 @@ class TheiaNeo4j(object):
             # Reset count
             self.count_be = 0
 
+    # Rotate clone edge files
+    def rotate_clone_edge(self):
+        # Increment counter
+        self.count_ce += 1
+
+        # If we need to rotate
+        if self.count_ce >= self.batch_edges:
+            log.info('Rotating Clone Edge CSV files')
+
+            # Flush content of file
+            self.csv_ce_file.flush()
+
+            # Close file
+            self.csv_ce_file.close()
+
+            # Set new filename
+            self.file_count_ce += 1
+            self.csv_ce = '{0}{1}.csv'.format(self.csv_ce_base,self.file_count_ce)
+
+            # Open new file
+            self.csv_ce_file = open(self.csv_ce,'w')
+
+            # Reset count
+            self.count_ce = 0
+
     # Rotate Subject Node Update CSV files
     def rotate_subject_update_node(self):
         # Increment counter
@@ -295,6 +325,9 @@ class TheiaNeo4j(object):
         cdm_host = data['hostId']
         uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=cdm_uuid))
 
+        # UUID 0
+        zero = '00000000-0000-0000-0000-000000000000'
+
 
         # If it's an event
         if cdm_type == 'RECORD_EVENT':
@@ -306,6 +339,9 @@ class TheiaNeo4j(object):
 
             predicate_uuid = data['datum']['predicateObject']
             p_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=predicate_uuid))
+
+            predicate2_uuid = data['datum']['predicateObject2']
+            p2_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=predicate2_uuid))
 
             timestamp = data['datum']['timestampNanos']
             size = data['datum']['size']
@@ -320,23 +356,44 @@ class TheiaNeo4j(object):
                                                                                 size, \
                                                                                 entry_type)
 
-            # If these are memory edges, we don't care about them for
+            # XXX(joey): EVENT_OPEN creates a backward edge, even
+            # when the process never writes to it. This causes us
+            # to pick up extra processes during backward analysis
+            # (replaying more processes than we should). We need a
+            # way to distinquish non-dataflow events from dataflow
+            # events.  For now, let's just ignore them.
+            if entry_type == 'EVENT_OPEN':
+                return
+
+            # We only care about one particular case of MMAP for the reachability analysis
+            if (entry_type == 'EVENT_MMAP') and (str(uuid.UUID(bytes=predicate2_uuid)) == zero):
+                return
+
+            # If these are other memory edges, we don't care about them for
             # our reachability analysis at the moment
-            if entry_type == 'EVENT_MPROTECT' or \
-               entry_type == 'EVENT_MMAP':
+            if entry_type == 'EVENT_MPROTECT':
                 return
 
             # If this is a backwards edge
-            if entry_type == 'EVENT_READ' or \
-               entry_type == 'EVENT_READ_SOCKET_PARAMS' or \
-               entry_type == 'EVENT_RECVFROM' or \
-               entry_type == 'EVENT_RECVMSG':
+            if (entry_type == 'EVENT_READ') or \
+               (entry_type == 'EVENT_READ_SOCKET_PARAMS') or \
+               (entry_type == 'EVENT_RECVFROM') or \
+               (entry_type == 'EVENT_RECVMSG'):
 
                 # Write output to CSV file
                 self.csv_be_file.write(output)
 
                 # See if we need to rotate files
                 self.rotate_backward_edge()
+
+            # If this is a clone edge (special)
+            elif entry_type == 'EVENT_CLONE':
+
+                # Write output to CSV file
+                self.csv_ce_file.write(output)
+
+                # See if we need to rotate files
+                self.rotate_clone_edge()
 
             # Else this is a forward edge
             else:
@@ -382,10 +439,12 @@ class TheiaNeo4j(object):
 
         # If it's a subject
         elif cdm_type == 'RECORD_SUBJECT':
+
             # Get parameters
             entry_type = data['datum']['type']
 
             cid = data['datum']['cid']
+            tgid = data['datum']['properties']['tgid']
 
             parent_uuid = data['datum']['parentSubject']
             p_uuid_str = str(uuid.UUID(bytes=cdm_host)) + '_' + str(uuid.UUID(bytes=parent_uuid))
@@ -402,15 +461,16 @@ class TheiaNeo4j(object):
             cmdline = self.sanitize(cmdline)
 
             # Construct CSV line
-            output = '"{0}","{1}","{2}","{3}","{4}","{5}","{6}","{7}","{8}"\n'.format('SUBJECT', \
-                                                                                      uuid_str, \
-                                                                                      entry_type, \
-                                                                                      cid, \
-                                                                                      p_uuid_str, \
-                                                                                      l_uuid_str, \
-                                                                                      timestamp, \
-                                                                                      cmdline, \
-                                                                                      str(cid) + ':' + cmdline)
+            output = '"{0}","{1}","{2}","{3}","{4}","{5}","{6}","{7}","{8}","{9}"\n'.format('SUBJECT', \
+                                                                                            uuid_str, \
+                                                                                            entry_type, \
+                                                                                            cid, \
+                                                                                            tgid, \
+                                                                                            p_uuid_str, \
+                                                                                            l_uuid_str, \
+                                                                                            timestamp, \
+                                                                                            cmdline, \
+                                                                                            str(cid) + ':' + cmdline)
 
             # Write output to CSV file
             self.csv_sn_file.write(output)
@@ -517,6 +577,7 @@ class TheiaNeo4j(object):
             self.count_nn = self.batch_nodes
             self.count_fe = self.batch_edges
             self.count_be = self.batch_edges
+            self.count_ce = self.batch_edges
             self.count_sn_update = self.batch_nodes
             self.count_in = self.batch_nodes
 
@@ -527,6 +588,7 @@ class TheiaNeo4j(object):
             self.rotate_netflow_node()
             self.rotate_forward_edge()
             self.rotate_backward_edge()
+            self.rotate_clone_edge()
             self.rotate_subject_update_node()
             self.rotate_ipc_node()
 

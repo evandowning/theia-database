@@ -94,30 +94,6 @@ CYPHER_ARGS="-u $USER -p $PASS"
 QUERY="\"CREATE CONSTRAINT ON (n:NODE) ASSERT n.uuid IS UNIQUE\""
 eval "${CYPHER_BIN}" "${CYPHER_ARGS}" "${QUERY}"
 
-# Run query on backward edges
-QUERY="\"
-USING PERIODIC COMMIT 500
-LOAD CSV FROM 'file:///backward-edge-$2.csv' as line
-MERGE (n1:NODE {uuid: line[3]})
-MERGE (n2:NODE {uuid: line[4]})
-WITH line,n1,n2
-WHERE n1.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0' AND n2.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'
-CREATE (n1)<-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[5], size:line[6], name:line[7]}]-(n2)
-\""
-query $archive "$root/backward-edge-*" "\${QUERY}" ${IMPORT_DIR}/backward-edge-$2.csv
-
-# Run query on forward edges
-QUERY="\"
-USING PERIODIC COMMIT 500
-LOAD CSV FROM 'file:///forward-edge-$2.csv' as line
-MERGE (n1:NODE {uuid: line[3]})
-MERGE (n2:NODE {uuid: line[4]})
-WITH line,n1,n2
-WHERE n1.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0' AND n2.uuid <> '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'
-CREATE (n1)-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[5], size:line[6], name:line[7]}]->(n2)
-\""
-query $archive "$root/forward-edge-*" "\${QUERY}" ${IMPORT_DIR}/forward-edge-$2.csv
-
 # Run query on principal nodes
 QUERY="\"
 USING PERIODIC COMMIT 500
@@ -133,8 +109,8 @@ QUERY="\"
 USING PERIODIC COMMIT 500
 LOAD CSV FROM 'file:///subject-node-$2.csv' as line
 MERGE (n:NODE {uuid: line[1]})
-ON CREATE SET n.nodeType = line[0], n.type = line[2], n.cid = line[3], n.parent_subject = line[4], n.local_principal = line[5], n.ts = line[6], n.cmdline = line[7], n.name = line[8]
-ON MATCH SET n.nodeType = line[0], n.type = line[2], n.cid = line[3], n.parent_subject = line[4], n.local_principal = line[5], n.ts = line[6], n.cmdline = line[7], n.name = line[8];
+ON CREATE SET n.nodeType = line[0], n.type = line[2], n.cid = line[3], n.tgid = line[4], n.parent_subject = line[5], n.local_principal = line[6], n.ts = line[7], n.cmdline = line[8], n.name = line[9]
+ON MATCH SET n.nodeType = line[0], n.type = line[2], n.cid = line[3], n.tgid = line[4], n.parent_subject = line[5], n.local_principal = line[6], n.ts = line[7], n.cmdline = line[8], n.name = line[9];
 \""
 query $archive "$root/subject-node-*" "\${QUERY}" ${IMPORT_DIR}/subject-node-$2.csv
 
@@ -176,6 +152,47 @@ ON CREATE SET n.nodeType = line[0], n.type = line[2], n.name = line[3]
 ON MATCH SET n.nodeType = line[0], n.type = line[2], n.name = line[3]
 \""
 query $archive "$root/ipc-node-*" "\${QUERY}" ${IMPORT_DIR}/ipc-node-$2.csv
+
+# Run query on backward edges
+QUERY="\"
+USING PERIODIC COMMIT 500
+LOAD CSV FROM 'file:///backward-edge-$2.csv' as line
+MERGE (n1:NODE {uuid: line[3]})
+MERGE (n2:NODE {uuid: line[4]})
+WITH line,n1,n2
+WHERE NOT n1.uuid ENDS WITH '00000000-0000-0000-0000-000000000000' AND NOT n2.uuid ENDS WITH '00000000-0000-0000-0000-000000000000'
+CREATE (n1)<-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[5], size:line[6], name:line[7]}]-(n2)
+\""
+query $archive "$root/backward-edge-*" "\${QUERY}" ${IMPORT_DIR}/backward-edge-$2.csv
+
+# Run query on forward edges
+QUERY="\"
+USING PERIODIC COMMIT 500
+LOAD CSV FROM 'file:///forward-edge-$2.csv' as line
+MERGE (n1:NODE {uuid: line[3]})
+MERGE (n2:NODE {uuid: line[4]})
+WITH line,n1,n2
+WHERE NOT n1.uuid ENDS WITH '00000000-0000-0000-0000-000000000000' AND NOT n2.uuid ENDS WITH '00000000-0000-0000-0000-000000000000'
+CREATE (n1)-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[5], size:line[6], name:line[7]}]->(n2)
+\""
+query $archive "$root/forward-edge-*" "\${QUERY}" ${IMPORT_DIR}/forward-edge-$2.csv
+
+# Run query on clone edges
+# All edges need to be forward, except when pid and tgid are different
+# Then they need to be bi-directional
+QUERY="\"
+USING PERIODIC COMMIT 500
+LOAD CSV FROM 'file:///clone-edge-$2.csv' as line
+MERGE (n1:NODE {uuid: line[3]})
+MERGE (n2:NODE {uuid: line[4]})
+WITH line,n1,n2
+WHERE NOT n1.uuid ENDS WITH '00000000-0000-0000-0000-000000000000' AND NOT n2.uuid ENDS WITH '00000000-0000-0000-0000-000000000000'
+CREATE (n1)-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[5], size:line[6], name:line[7]}]->(n2)
+WITH line,n1,n2
+WHERE NOT n1.cid = n1.tgid
+CREATE (n1)<-[:NODE {uuid:line[1], nodeType:line[0], type:line[2], ts:line[5], size:line[6], name:line[7]}]-(n2)
+\""
+query $archive "$root/clone-edge-*" "\${QUERY}" ${IMPORT_DIR}/clone-edge-$2.csv
 
 # Remove lockfile
 rm -f ${LOCKFILE}
