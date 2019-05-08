@@ -170,7 +170,7 @@ class TheiaAnomaly(object):
 
             # If cache is too big, remove most unpopular cached item
             if len(self.cache.keys()) >= self.cache_max:
-                smallest = sorted(d.keys(), key=lambda x: x[1], reverse=True)[0]
+                smallest = sorted(self.cache.keys(), key=lambda x: x[1], reverse=True)[0]
                 del self.cache[smallest]
 
             # Insert filename into cache
