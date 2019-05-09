@@ -14,12 +14,13 @@ function query() {
     OUT=$4
 
     # Run queries from each CSV file
-    count=1
-    max=`ls -1 $BASE | wc -l`
-    for file in `ls -1 $BASE | sort -n`; do
-        if [[ -f $file ]]; then
+    count=$(ls -1 $BASE | wc -l)
+    for file_num in `ls -1 $BASE | sed 's/.*-\(.*\)/\1/' | sort -n`; do
+        file="${BASE:0:-1}${file_num}"
+
+        if [[ -f "$file" ]]; then
             # Check if we need to exit
-            if [[ $max -le $count ]]; then
+            if [[ $count -eq 1 ]]; then
                 break
             fi
 
@@ -36,8 +37,8 @@ function query() {
                 mv $file $archive
             fi
 
-            # Increment count
-            count=$((count+1))
+            # Decrement count
+            count=$((count-1))
         fi
     done
 

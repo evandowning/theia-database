@@ -140,7 +140,10 @@ class TheiaAnomaly(object):
             # Get parameters
             entry_type = data['datum']['type']
 
-            path = data['datum']['properties']['path']
+            if 'path' in data['datum']['properties']:
+                path = data['datum']['properties']['path']
+            else:
+                path = 'None'
 
             # Sanitize special characters
             path = self.sanitize(path)
